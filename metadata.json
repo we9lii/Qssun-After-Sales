@@ -1,0 +1,8 @@
+{
+  "name": "Qssun After Sales",
+  "description": "نظام لتوثيق العمل الميداني وإدارة التقارير الفنية وحفظ الحقوق.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
