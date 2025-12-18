@@ -9,25 +9,40 @@ import { fileURLToPath } from 'url';
 
 dotenv.config();
 
-const app = express();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+console.log('Starting server...');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 // 1. Middleware
+const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increase limit for Base64 images
 
-// 2. Database Connection (PostgreSQL via Sequelize)
-// Render provides the DB connection string in process.env.DATABASE_URL
-const sequelize = new Sequelize(process.env.DATABASE_URL || 'postgres://user:pass@localhost:5432/dbname', {
-  dialect: 'postgres',
-  logging: false,
-  dialectOptions: {
-    ssl: process.env.NODE_ENV === 'production' ? {
-      require: true,
-      rejectUnauthorized: false
-    } : false
-  }
-});
+// 2. Database Connection (PostgreSQL via Sequelize OR SQLite for local)
+let sequelize;
+
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false // Required for Render's self-signed certs
+      }
+    },
+    logging: false
+  });
+  console.log('Sequelize configured for PostgreSQL');
+} else {
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: './database.sqlite',
+    logging: console.log
+  });
+  console.log('Sequelize forced to SQLite');
+}
+
+console.log('Sequelize instance created. Dialect:', sequelize.getDialect());
 
 // 3. Define Models
 
@@ -102,19 +117,19 @@ app.get('/api/reports', async (req, res) => {
 app.post('/api/reports', async (req, res) => {
   try {
     const data = req.body;
-    
+
     // Upload Images to Cloudinary
     console.log('Uploading images...');
     const photoBeforeUrl = await uploadImage(data.photoBefore);
     const photoAfterUrl = await uploadImage(data.photoAfter);
-    
+
     // Create Record in DB
     const report = await Report.create({
       ...data,
       photoBefore: photoBeforeUrl,
       photoAfter: photoAfterUrl,
     });
-    
+
     res.json(report);
   } catch (err) {
     console.error(err);
@@ -144,32 +159,35 @@ app.post('/api/users', async (req, res) => {
 
 // Sync DB and Seed if empty
 const MOCK_USERS = [
-  { 
-    id: 'tech_faisal_m', 
-    name: 'فيصل محمد', 
-    role: 'TECHNICIAN', 
+  {
+    id: 'tech_faisal_m',
+    name: 'فيصل محمد',
+    role: 'TECHNICIAN',
     username: 'we9l',
     password: '1',
     phone: '0500000001',
-    avatar: 'https://ui-avatars.com/api/?name=Faisal+Mohammed&background=0D9488&color=fff&bold=true' 
+    avatar: 'https://ui-avatars.com/api/?name=Faisal+Mohammed&background=0D9488&color=fff&bold=true'
   },
-  { 
-    id: 'mgr_faisal_n', 
-    name: 'فيصل النتيفي', 
-    role: 'MANAGER', 
+  {
+    id: 'mgr_faisal_n',
+    name: 'فيصل النتيفي',
+    role: 'MANAGER',
     username: 'we9li',
     password: '1',
     phone: '0500000002',
-    avatar: 'https://ui-avatars.com/api/?name=Faisal+Alnutaifi&background=4F46E5&color=fff&bold=true' 
+    avatar: 'https://ui-avatars.com/api/?name=Faisal+Alnutaifi&background=4F46E5&color=fff&bold=true'
   },
 ];
 
 const initDB = async () => {
   try {
+    console.log('Authenticating DB connection...');
     await sequelize.authenticate();
     console.log('Database connected.');
+    console.log('Syncing models...');
     await sequelize.sync({ alter: true }); // Updates tables if schema changes
-    
+    console.log('Models synced.');
+
     // Seed initial users if none exist
     const userCount = await User.count();
     if (userCount === 0) {
