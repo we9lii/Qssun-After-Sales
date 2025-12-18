@@ -539,6 +539,23 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleDeleteReport = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm(lang === 'ar' ? 'هل أنت متأكد من حذف هذا التقرير؟' : 'Are you sure you want to delete this report?')) return;
+
+    try {
+      const res = await fetch(`${apiUrl}/reports/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setReports(prev => prev.filter(r => r.id !== id));
+      } else {
+        alert('Failed to delete report');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error deleting report');
+    }
+  };
+
   const saveReport = (newReport: Report) => {
     // The actual API call is inside TechnicianForm, this just updates UI state
     setReports(prev => [newReport, ...prev]);
@@ -717,8 +734,19 @@ const AppContent: React.FC = () => {
                         <UserCircle size={16} />
                         {report.technicianName.split(' ')[0]}
                       </div>
-                      <div className="text-xs font-mono text-gray-400">
-                        {new Date(report.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+                      <div className="flex items-center gap-3">
+                        <div className="text-xs font-mono text-gray-400">
+                          {new Date(report.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-SA' : 'en-US')}
+                        </div>
+                        {(currentUser.role === UserRole.MANAGER || currentUser.id === report.technicianId) && (
+                          <button
+                            onClick={(e) => handleDeleteReport(e, report.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div >
