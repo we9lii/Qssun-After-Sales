@@ -9,7 +9,7 @@ import {
   Moon, Sun, Globe, Zap, ChevronRight, ChevronLeft, Plus,
   ShieldCheck, Smartphone, CheckCircle, Clock, CheckCircle2,
   Lock, KeyRound, Sparkles, LayoutGrid, ArrowRight, Activity, BarChart3,
-  Settings, UserPlus, RefreshCw, Copy, X, Users, Briefcase, Loader2
+  Settings, UserPlus, RefreshCw, Copy, X, Users, Briefcase, Loader2, Trash2
 } from 'lucide-react';
 
 // --- Contexts ---
@@ -164,10 +164,11 @@ const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User) => void, us
 interface UserManagementModalProps {
   onClose: () => void;
   onCreate: (u: User) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
   users: User[];
 }
 
-const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCreate, users }) => {
+const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCreate, onDelete, users }) => {
   const { t, dir } = useAppContext();
   const [view, setView] = useState<'MENU' | 'CREATE' | 'LIST'>('MENU');
 
@@ -216,21 +217,27 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
 
   const shareMessage = () => {
     if (!createdUser) return;
-    const msg = `
-${t.appLink}: ${window.location.origin}
-${t.appDownload}: https://qssun.com/app
-----------------
-${t.username}: ${createdUser.username}
-${t.password}: ${createdUser.password}
-----------------
-${t.employeeName}: ${createdUser.name}
-    `.trim();
+    const msg = `${t.username}: ${createdUser.username}\n${t.password}: ${createdUser.password}\n${t.appLink}: ${window.location.origin}`;
 
-    navigator.clipboard.writeText(msg).then(() => {
-      alert(t.copied);
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-    });
+    // Attempt modern clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg)
+        .then(() => alert(t.copied || 'Copied!'))
+        .catch(err => console.error('Copy failed', err));
+    } else {
+      // Fallback
+      const textArea = document.createElement("textarea");
+      textArea.value = msg;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        alert(t.copied || 'Copied!');
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   // Content for MENU view
@@ -372,6 +379,16 @@ ${t.employeeName}: ${createdUser.name}
                 <Smartphone size={16} />
               </a>
             )}
+            {u.role !== UserRole.MANAGER && (
+              <button
+                onClick={() => {
+                  if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) onDelete(u.id);
+                }}
+                className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/40 transition"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -482,6 +499,20 @@ const AppContent: React.FC = () => {
       setUsers(prev => [...prev, savedUser]);
     } else {
       throw new Error('Failed to create user');
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const res = await fetch(`${apiUrl}/users/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setUsers(prev => prev.filter(u => u.id !== id));
+      } else {
+        alert('Failed to delete user');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error deleting user');
     }
   };
 
@@ -700,6 +731,7 @@ const AppContent: React.FC = () => {
         <UserManagementModal
           onClose={() => setShowUserManagement(false)}
           onCreate={handleCreateUser}
+          onDelete={handleDeleteUser}
           users={users}
         />
       )

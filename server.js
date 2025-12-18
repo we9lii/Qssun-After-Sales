@@ -157,6 +157,17 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
+// DELETE /api/users/:id
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await User.destroy({ where: { id } });
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Sync DB and Seed if empty
 const MOCK_USERS = [
   {
