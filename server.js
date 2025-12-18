@@ -169,6 +169,17 @@ app.delete('/api/reports/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/reports/:id
+app.delete('/api/reports/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Report.destroy({ where: { id } });
+    res.json({ message: 'Report deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/users
 app.get('/api/users', async (req, res) => {
   try {
