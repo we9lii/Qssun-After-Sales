@@ -127,10 +127,22 @@ app.post('/api/reports', async (req, res) => {
   try {
     const data = req.body;
 
-    // Upload Images to Cloudinary
+    // Upload Images to Cloudinary (Graceful Handling)
     console.log('Uploading images...');
-    const photoBeforeUrl = await uploadImage(data.photoBefore);
-    const photoAfterUrl = await uploadImage(data.photoAfter);
+
+    let photoBeforeUrl = null;
+    try {
+      if (data.photoBefore) photoBeforeUrl = await uploadImage(data.photoBefore);
+    } catch (e) {
+      console.error("Warning: PhotoBefore upload failed, saving without it.", e.message);
+    }
+
+    let photoAfterUrl = null;
+    try {
+      if (data.photoAfter) photoAfterUrl = await uploadImage(data.photoAfter);
+    } catch (e) {
+      console.error("Warning: PhotoAfter upload failed, saving without it.", e.message);
+    }
 
     // Create Record in DB
     const report = await Report.create({
@@ -142,6 +154,17 @@ app.post('/api/reports', async (req, res) => {
     res.json(report);
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/reports/:id
+app.delete('/api/reports/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Report.destroy({ where: { id } });
+    res.json({ message: 'Report deleted' });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
