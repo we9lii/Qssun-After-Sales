@@ -169,10 +169,11 @@ interface UserManagementModalProps {
 }
 
 const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCreate, onDelete, users }) => {
-  const { t, dir } = useAppContext();
+  const { t, dir, lang } = useAppContext();
   const [view, setView] = useState<'MENU' | 'CREATE' | 'LIST'>('MENU');
 
   const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>(UserRole.TECHNICIAN);
 
   const [phone, setPhone] = useState('');
   const [username, setUsername] = useState('');
@@ -199,7 +200,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
     const newUser: User = {
       id: `tech_${Date.now()}`,
       name,
-      role: UserRole.TECHNICIAN,
+      role,
       phone,
       username,
       password,
@@ -310,6 +311,28 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
           </div>
         </div>
 
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{t.role || 'Role'}</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setRole(UserRole.TECHNICIAN)}
+              className={`p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition ${role === UserRole.TECHNICIAN ? 'border-volt-500 bg-volt-50 dark:bg-volt-900/20 text-volt-600 dark:text-volt-400' : 'border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+            >
+              <Briefcase size={18} />
+              {t.roleTechnician || 'فني ميداني'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setRole(UserRole.MANAGER)}
+              className={`p-3 rounded-xl border flex items-center justify-center gap-2 font-bold transition ${role === UserRole.MANAGER ? 'border-volt-500 bg-volt-50 dark:bg-volt-900/20 text-volt-600 dark:text-volt-400' : 'border-gray-200 dark:border-white/10 text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+            >
+              <ShieldCheck size={18} />
+              {t.roleManager}
+            </button>
+          </div>
+        </div>
+
         <button type="button" onClick={generatePassword} className="w-full py-3 border-2 border-dashed border-volt-300 dark:border-volt-700 rounded-xl text-volt-600 dark:text-volt-400 font-bold hover:bg-volt-50 dark:hover:bg-volt-900/20 transition flex items-center justify-center gap-2">
           <RefreshCw size={18} /> {t.generatePass}
         </button>
@@ -317,7 +340,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
         <button type="submit" disabled={!name || !phone || !username || !password || isCreating} className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 py-4 rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
           {isCreating ? <Loader2 className="animate-spin" /> : t.createUser}
         </button>
-      </form>
+      </form >
     ) : (
       <div className="p-6 text-center space-y-6">
         <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto text-emerald-500">
@@ -370,7 +393,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] font-mono text-gray-500 bg-white dark:bg-black/20 px-1.5 py-0.5 rounded border border-gray-200 dark:border-white/10">{u.username}</span>
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${u.role === UserRole.MANAGER ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-500 bg-gray-200 dark:bg-gray-800'}`}>
-                  {u.role === UserRole.MANAGER ? t.roleManager : t.roleTechnician}
+                  {u.username === 'we9li' ? (lang === 'ar' ? 'مدير النظام' : 'System Manager') : (u.role === UserRole.MANAGER ? t.roleManager : t.roleTechnician)}
                 </span>
               </div>
             </div>

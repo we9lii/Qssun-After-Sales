@@ -89,20 +89,26 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('CRITICAL: Cloudinary environment variables are missing!');
+}
+
 // 5. API Routes
 
 // Helper to upload to Cloudinary
 const uploadImage = async (base64Str) => {
   if (!base64Str) return null;
   try {
+    console.log('Starting Cloudinary upload...');
     const result = await cloudinary.uploader.upload(base64Str, {
       folder: 'qssun_reports',
       resource_type: 'image'
     });
+    console.log('Cloudinary upload success:', result.secure_url);
     return result.secure_url;
   } catch (error) {
-    console.error('Cloudinary Upload Error:', error);
-    return null;
+    console.error('Cloudinary Upload Error Details:', JSON.stringify(error, null, 2));
+    throw new Error('Image upload failed: ' + error.message);
   }
 };
 
