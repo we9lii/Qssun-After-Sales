@@ -28,7 +28,8 @@ const ReportView: React.FC<ReportViewProps> = ({ report, onClose }) => {
   const newInstallParams = [
     'P02.00', 'P02.01', 'P02.02', 'P02.03', 'P02.04', 'P02.05',
     'P08.53', 'P00.03', 'P00.04', 'P00.11', 'P05.05',
-    'P05.01', 'P05.14', 'P15.05', 'P15.06', 'P15.07'
+    'P05.01', 'P05.14', 'P15.05', 'P15.06', 'P15.07',
+    'P15.08', 'P15.09', 'P01.08', 'P08.28', 'P08.29', 'P11.06'
   ];
 
   const isSpecialMode = report.maintenanceType === 'New Installation / تركيب جديد' || report.maintenanceType === 'Package Preparation / تجهيز بكج';
