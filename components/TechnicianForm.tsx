@@ -190,9 +190,16 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
 
     // 4. Photos Mandatory
     const isNewInstall = maintenanceType === 'New Installation / تركيب جديد';
+    const isPackagePrep = maintenanceType === 'Package Preparation / تجهيز بكج';
+
     if (isNewInstall) {
       if (!photoVoltage || !photoCurrent || !photoFrequency || !photoSpeed) {
         alert(lang === 'ar' ? 'جميع صور القراءات (الجهد، التيار، التردد، السرعة) مطلوبة' : 'All reading photos (Voltage, Current, Frequency, Speed) are required');
+        return false;
+      }
+    } else if (isPackagePrep) {
+      if (!photoInverter || !photoWorkTable) {
+        alert(lang === 'ar' ? 'صور المحول وطاولة العمل مطلوبة' : 'Inverter and Work Table photos are required');
         return false;
       }
     } else {
@@ -731,8 +738,16 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
               <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 mb-2">
                 <PenTool size={32} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{t.signHere}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">Please ask the customer to sign below to confirm job completion.</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {maintenanceType === 'Package Preparation / تجهيز بكج'
+                  ? (lang === 'ar' ? 'توقيع الفني المسؤول' : 'Responsible Technician Signature')
+                  : t.signHere}
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mx-auto">
+                {maintenanceType === 'Package Preparation / تجهيز بكج'
+                  ? (lang === 'ar' ? 'يرجى التوقيع أدناه لاعتماد البكج' : 'Please sign below to authorize the package')
+                  : 'Please ask the customer to sign below to confirm job completion.'}
+              </p>
 
               <div className="bg-white/60 dark:bg-white/5 p-4 rounded-2xl border border-white/50 dark:border-white/10 shadow-inner">
                 <SignaturePad onEnd={setSignature} />

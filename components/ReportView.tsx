@@ -282,7 +282,11 @@ const ReportView: React.FC<ReportViewProps> = ({ report, onClose }) => {
               </h3>
               <div className="grid grid-cols-2 gap-8">
                 <div className="text-center print:break-inside-avoid bg-white/50 dark:bg-white/5 rounded-xl p-4 border border-white/50 dark:border-white/5 shadow-sm print:border-gray-800 print:border-2 print:rounded-none">
-                  <p className="text-xs font-bold mb-3 text-gray-400 print:text-gray-600 uppercase tracking-wider">{t.signHere}</p>
+                  <p className="text-xs font-bold mb-3 text-gray-400 print:text-gray-600 uppercase tracking-wider">
+                    {report.maintenanceType === 'Package Preparation / تجهيز بكج'
+                      ? (lang === 'ar' ? 'توقيع الفني المسؤول' : 'Responsible Technician Signature')
+                      : t.signHere}
+                  </p>
                   {report.customerSignature ? (
                     <div className="bg-white rounded-lg border border-dashed border-gray-200 p-2 print:border-0">
                       <img src={report.customerSignature} alt="Customer Sig" className="h-16 mx-auto object-contain mix-blend-multiply dark:mix-blend-normal" />

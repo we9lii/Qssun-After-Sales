@@ -28,10 +28,11 @@ export const useAppContext = () => useContext(AppContext);
 const apiUrl = 'https://qssun-after-sales.onrender.com/api';
 
 // --- Login Screen Component ---
-const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User) => void, usersList: User[] }) => {
+const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User, remember: boolean) => void, usersList: User[] }) => {
   const { t, theme, toggleTheme, lang, setLang } = useAppContext();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +47,7 @@ const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User) => void, us
       );
 
       if (foundUser) {
-        onLogin(foundUser);
+        onLogin(foundUser, rememberMe);
       } else {
         setError(true);
         setIsLoading(false);
@@ -123,6 +124,15 @@ const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User) => void, us
             </div>
           </div>
 
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setRememberMe(!rememberMe)}>
+            <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${rememberMe ? 'bg-volt-600 border-volt-600' : 'bg-gray-50 dark:bg-black/20 border-gray-300 dark:border-white/20 group-hover:border-volt-500'}`}>
+              {rememberMe && <CheckCircle size={14} className="text-white" strokeWidth={3} />}
+            </div>
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 select-none group-hover:text-volt-600 dark:group-hover:text-volt-400 transition-colors">
+              {lang === 'ar' ? 'تذكرني' : 'Remember Me'}
+            </span>
+          </div>
+
           {error && (
             <div className="text-center py-1 animate-in fade-in slide-in-from-top-1">
               <span className="text-red-500 dark:text-red-400 text-xs font-bold flex items-center justify-center gap-1">
@@ -155,8 +165,8 @@ const LoginScreen = ({ onLogin, usersList }: { onLogin: (user: User) => void, us
             {t.devCredit}
           </p>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
@@ -452,6 +462,7 @@ const AppContent: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLoginIntro, setShowLoginIntro] = useState(false);
   const [tempUser, setTempUser] = useState<User | null>(null);
+  const [rememberSession, setRememberSession] = useState(false);
 
   const [reports, setReports] = useState<Report[]>([]);
   const [view, setView] = useState<'DASHBOARD' | 'NEW_FORM'>('DASHBOARD');
@@ -519,17 +530,19 @@ const AppContent: React.FC = () => {
     checkSession();
   }, []);
 
-  const handleLogin = (user: User) => {
+  const handleLogin = (user: User, remember: boolean) => {
     setTempUser(user);
+    setRememberSession(remember);
     setShowLoginIntro(true);
   };
 
   const handleIntroComplete = () => {
     setCurrentUser(tempUser);
 
-    // Save session (25 minutes)
+    // Save session (25 minutes or 30 days)
     if (tempUser) {
-      const expiry = Date.now() + 25 * 60 * 1000; // 25 minutes
+      const duration = rememberSession ? 30 * 24 * 60 * 60 * 1000 : 25 * 60 * 1000;
+      const expiry = Date.now() + duration;
       localStorage.setItem('qssun_session', JSON.stringify({ user: tempUser, expiry }));
     }
 
