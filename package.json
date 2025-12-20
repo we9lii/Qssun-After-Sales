@@ -11,6 +11,9 @@
     "server": "nodemon server.js"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
     "cloudinary": "^2.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

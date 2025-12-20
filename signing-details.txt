@@ -1,0 +1,4 @@
+Keystore Location: android/app/release.keystore
+Alias: qssun
+Key Password: qssun_password
+Store Password: qssun_password

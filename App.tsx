@@ -306,7 +306,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({ onClose, onCr
           <div>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{t.password}</label>
             <div className="relative">
-              <input type="text" required value={password} readOnly className="w-full bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none font-bold dark:text-white font-mono text-center tracking-widest text-lg" />
+              <input type="text" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl p-3 outline-none focus:border-volt-500 font-bold dark:text-white text-center text-lg placeholder-gray-400" placeholder="••••••" />
             </div>
           </div>
         </div>
@@ -499,6 +499,26 @@ const AppContent: React.FC = () => {
     fetchData();
   }, []);
 
+  // SESSION PERSISTENCE LOGIC
+  useEffect(() => {
+    const checkSession = () => {
+      const savedSession = localStorage.getItem('qssun_session');
+      if (savedSession) {
+        try {
+          const { user, expiry } = JSON.parse(savedSession);
+          if (Date.now() < expiry) {
+            setCurrentUser(user);
+          } else {
+            localStorage.removeItem('qssun_session');
+          }
+        } catch (e) {
+          localStorage.removeItem('qssun_session');
+        }
+      }
+    };
+    checkSession();
+  }, []);
+
   const handleLogin = (user: User) => {
     setTempUser(user);
     setShowLoginIntro(true);
@@ -506,6 +526,13 @@ const AppContent: React.FC = () => {
 
   const handleIntroComplete = () => {
     setCurrentUser(tempUser);
+
+    // Save session (25 minutes)
+    if (tempUser) {
+      const expiry = Date.now() + 25 * 60 * 1000; // 25 minutes
+      localStorage.setItem('qssun_session', JSON.stringify({ user: tempUser, expiry }));
+    }
+
     setShowLoginIntro(false);
     setTempUser(null);
   };
@@ -624,7 +651,11 @@ const AppContent: React.FC = () => {
                 {lang === 'ar' ? 'EN' : 'ع'}
               </button>
             </div>
-            <button onClick={() => { setCurrentUser(null); setView('DASHBOARD'); }} className="flex items-center gap-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 px-3 md:px-4 py-2 rounded-xl transition text-sm font-bold">
+            <button onClick={() => {
+              setCurrentUser(null);
+              localStorage.removeItem('qssun_session');
+              setView('DASHBOARD');
+            }} className="flex items-center gap-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 px-3 md:px-4 py-2 rounded-xl transition text-sm font-bold">
               <LogOut size={18} />
               <span className="hidden sm:inline">{t.logout}</span>
             </button>

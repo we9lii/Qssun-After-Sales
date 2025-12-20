@@ -34,30 +34,38 @@ export interface Report {
   photoBefore: string | null; // Base64
   photoAfter: string | null; // Base64
   // New dynamic parameters structure
-  voltageReadings: Record<string, string>; 
+  voltageReadings: Record<string, string>;
   notes: string;
   customerSignature: string | null; // Base64
   createdAt: string;
+  photoVoltage?: string | null;
+  photoCurrent?: string | null;
+  photoFrequency?: string | null;
+  photoSpeed?: string | null;
+  photoInverter?: string | null;
+  photoWorkTable?: string | null;
+  updateName?: string;
+  updateType?: string;
   status: 'pending' | 'completed' | 'approved';
 }
 
 export const MOCK_USERS: User[] = [
-  { 
-    id: 'tech_faisal_m', 
-    name: 'فيصل محمد', 
-    role: UserRole.TECHNICIAN, 
+  {
+    id: 'tech_faisal_m',
+    name: 'فيصل محمد',
+    role: UserRole.TECHNICIAN,
     username: 'we9l',
     password: '1',
     phone: '0500000001',
-    avatar: 'https://ui-avatars.com/api/?name=Faisal+Mohammed&background=0D9488&color=fff&bold=true' 
+    avatar: 'https://ui-avatars.com/api/?name=Faisal+Mohammed&background=0D9488&color=fff&bold=true'
   },
-  { 
-    id: 'mgr_faisal_n', 
-    name: 'فيصل النتيفي', 
-    role: UserRole.MANAGER, 
+  {
+    id: 'mgr_faisal_n',
+    name: 'فيصل النتيفي',
+    role: UserRole.MANAGER,
     username: 'we9li',
     password: '1',
     phone: '0500000002',
-    avatar: 'https://ui-avatars.com/api/?name=Faisal+Alnutaifi&background=4F46E5&color=fff&bold=true' 
+    avatar: 'https://ui-avatars.com/api/?name=Faisal+Alnutaifi&background=4F46E5&color=fff&bold=true'
   },
 ];
