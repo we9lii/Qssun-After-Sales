@@ -65,8 +65,14 @@ const Report = sequelize.define('Report', {
   startTime: { type: DataTypes.DATE },
   endTime: { type: DataTypes.DATE },
   location: { type: DataTypes.JSONB }, // Stores lat, lng, etc.
-  photoBefore: { type: DataTypes.TEXT }, // URL from Cloudinary
-  photoAfter: { type: DataTypes.TEXT },  // URL from Cloudinary
+  photoBefore: { type: DataTypes.JSON }, // Changed to JSON to store string[]
+  photoAfter: { type: DataTypes.JSON },  // Changed to JSON to store string[]
+  photoVoltage: { type: DataTypes.JSON }, // New Field
+  photoCurrent: { type: DataTypes.JSON }, // New Field
+  photoFrequency: { type: DataTypes.JSON }, // New Field
+  photoSpeed: { type: DataTypes.JSON }, // New Field
+  photoInverter: { type: DataTypes.JSON }, // New Field
+  photoWorkTable: { type: DataTypes.JSON }, // New Field
   voltageReadings: { type: DataTypes.JSONB }, // Stores P07.xx keys
   notes: { type: DataTypes.TEXT },
   customerSignature: { type: DataTypes.TEXT }, // Base64 (usually small enough) or URL
@@ -103,17 +109,41 @@ if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !pr
 const uploadImage = async (base64Str) => {
   if (!base64Str) return null;
   try {
-    console.log('Starting Cloudinary upload...');
+    // console.log('Starting Cloudinary upload...'); 
     const result = await cloudinary.uploader.upload(base64Str, {
       folder: 'qssun_reports',
       resource_type: 'image'
     });
-    console.log('Cloudinary upload success:', result.secure_url);
+    // console.log('Cloudinary upload success:', result.secure_url);
     return result.secure_url;
   } catch (error) {
     console.error('Cloudinary Upload Error Details:', JSON.stringify(error, null, 2));
     throw new Error('Image upload failed: ' + error.message);
   }
+};
+
+// Helper to handle multiple image uploads
+const uploadPhotoArray = async (images) => {
+  if (!images) return [];
+  const imageList = Array.isArray(images) ? images : [images];
+  if (imageList.length === 0) return [];
+
+  console.log(`Processing ${imageList.length} images...`);
+  const urls = [];
+
+  for (const img of imageList) {
+    if (typeof img === 'string' && img.startsWith('http')) {
+      urls.push(img); // Already uploaded
+    } else if (img) {
+      try {
+        const url = await uploadImage(img);
+        if (url) urls.push(url);
+      } catch (e) {
+        console.error("Single image upload failed:", e.message);
+      }
+    }
+  }
+  return urls;
 };
 
 // GET /api/reports
@@ -132,27 +162,29 @@ app.post('/api/reports', async (req, res) => {
     const data = req.body;
 
     // Upload Images to Cloudinary (Graceful Handling)
-    console.log('Uploading images...');
+    console.log('Uploading report images...');
 
-    let photoBeforeUrl = null;
-    try {
-      if (data.photoBefore) photoBeforeUrl = await uploadImage(data.photoBefore);
-    } catch (e) {
-      console.error("Warning: PhotoBefore upload failed, saving without it.", e.message);
-    }
-
-    let photoAfterUrl = null;
-    try {
-      if (data.photoAfter) photoAfterUrl = await uploadImage(data.photoAfter);
-    } catch (e) {
-      console.error("Warning: PhotoAfter upload failed, saving without it.", e.message);
-    }
+    // Process all photo fields
+    const photoBefore = await uploadPhotoArray(data.photoBefore);
+    const photoAfter = await uploadPhotoArray(data.photoAfter);
+    const photoVoltage = await uploadPhotoArray(data.photoVoltage);
+    const photoCurrent = await uploadPhotoArray(data.photoCurrent);
+    const photoFrequency = await uploadPhotoArray(data.photoFrequency);
+    const photoSpeed = await uploadPhotoArray(data.photoSpeed);
+    const photoInverter = await uploadPhotoArray(data.photoInverter);
+    const photoWorkTable = await uploadPhotoArray(data.photoWorkTable);
 
     // Create Record in DB
     const report = await Report.create({
       ...data,
-      photoBefore: photoBeforeUrl,
-      photoAfter: photoAfterUrl,
+      photoBefore,
+      photoAfter,
+      photoVoltage,
+      photoCurrent,
+      photoFrequency,
+      photoSpeed,
+      photoInverter,
+      photoWorkTable
     });
 
     res.json(report);

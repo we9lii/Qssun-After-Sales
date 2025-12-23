@@ -31,19 +31,19 @@ export interface Report {
   startTime: string; // ISO String
   endTime: string; // ISO String
   location: GeoLocation | null;
-  photoBefore: string | null; // Base64
-  photoAfter: string | null; // Base64
+  photoBefore: string[] | null;
+  photoAfter: string[] | null;
   // New dynamic parameters structure
   voltageReadings: Record<string, string>;
   notes: string;
   customerSignature: string | null; // Base64
   createdAt: string;
-  photoVoltage?: string | null;
-  photoCurrent?: string | null;
-  photoFrequency?: string | null;
-  photoSpeed?: string | null;
-  photoInverter?: string | null;
-  photoWorkTable?: string | null;
+  photoVoltage?: string[] | null;
+  photoCurrent?: string[] | null;
+  photoFrequency?: string[] | null;
+  photoSpeed?: string[] | null;
+  photoInverter?: string[] | null;
+  photoWorkTable?: string[] | null;
   updateName?: string;
   updateType?: string;
   status: 'pending' | 'completed' | 'approved';

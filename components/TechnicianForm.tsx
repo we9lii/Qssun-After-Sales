@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Report, GeoLocation } from '../types';
 import { useAppContext } from '../App';
-import { Camera, MapPin, Clock, Save, Loader2, StopCircle, CheckCircle2, ChevronRight, ChevronLeft, ImagePlus, Cpu, Zap, PenTool, User as UserIcon, Phone, Activity, Gauge } from 'lucide-react';
+import { Camera, MapPin, Clock, Save, Loader2, StopCircle, CheckCircle2, ChevronRight, ChevronLeft, ImagePlus, Cpu, Zap, PenTool, User as UserIcon, Phone, Activity, Gauge, X, Plus } from 'lucide-react';
 import SignaturePad from './SignaturePad';
 
 interface TechnicianFormProps {
@@ -9,6 +9,88 @@ interface TechnicianFormProps {
   onSave: (report: Report) => void; // Keeps the prop signature, but we'll modify behavior
   onCancel: () => void;
 }
+
+const PhotoUploadField = ({ label, icon, photos, setPhotos, uploadLabel, t, handlePhotoUpload, removePhoto }: any) => {
+  const [showOptions, setShowOptions] = useState(false);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <label className="text-sm font-bold text-gray-700 dark:text-white flex items-center gap-2">
+          {icon && <span className="scale-75">{icon}</span>}
+          {label}
+        </label>
+        {photos && photos.length > 0 && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">{photos.length} Captured</span>}
+      </div>
+
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          {photos.map((p: string, i: number) => (
+            <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
+              <img src={p} alt="Thumbnail" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(i, setPhotos)}
+                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main Add Button */}
+      {!showOptions ? (
+        <button
+          type="button"
+          onClick={() => setShowOptions(true)}
+          className="w-full bg-gray-50 dark:bg-gray-800/40 hover:bg-volt-50 dark:hover:bg-volt-900/10 border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-volt-300 dark:hover:border-volt-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"
+        >
+          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center group-hover:bg-volt-100 dark:group-hover:bg-volt-800 transition-colors">
+            <Plus size={20} className="text-gray-500 dark:text-gray-400 group-hover:text-volt-600 dark:group-hover:text-volt-300" />
+          </div>
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider group-hover:text-volt-600 dark:group-hover:text-volt-300">Add Photo / إضافة صورة</span>
+        </button>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 animate-in zoom-in-95 duration-200 shadow-lg">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Choose Source</span>
+            <button type="button" onClick={() => setShowOptions(false)}><X size={16} className="text-gray-400 hover:text-red-500" /></button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Camera Option */}
+            <div className="relative bg-volt-50 dark:bg-volt-900/10 hover:bg-volt-100 dark:hover:bg-volt-900/30 border border-volt-200 dark:border-volt-800 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                multiple
+                onChange={(e) => { handlePhotoUpload(e, setPhotos, uploadLabel); setShowOptions(false); }}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              />
+              <Camera size={24} className="text-volt-600 dark:text-volt-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold text-volt-700 dark:text-volt-300 uppercase">Camera</span>
+            </div>
+
+            {/* Gallery Option */}
+            <div className="relative bg-gray-50 dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors group">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => { handlePhotoUpload(e, setPhotos, uploadLabel); setShowOptions(false); }}
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+              />
+              <ImagePlus size={24} className="text-gray-500 dark:text-gray-400 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase">Album</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel }) => {
   const { t, dir, lang } = useAppContext();
@@ -24,18 +106,18 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
   const [maintenanceType, setMaintenanceType] = useState('Urgent Fix / عطل طارئ');
   const [location, setLocation] = useState<GeoLocation | null>(null);
 
-  const [photoBefore, setPhotoBefore] = useState<string | null>(null);
-  const [photoAfter, setPhotoAfter] = useState<string | null>(null);
+  const [photoBefore, setPhotoBefore] = useState<string[]>([]);
+  const [photoAfter, setPhotoAfter] = useState<string[]>([]);
 
   // New Installation Specific Photos
-  const [photoVoltage, setPhotoVoltage] = useState<string | null>(null);
-  const [photoCurrent, setPhotoCurrent] = useState<string | null>(null);
-  const [photoFrequency, setPhotoFrequency] = useState<string | null>(null);
-  const [photoSpeed, setPhotoSpeed] = useState<string | null>(null);
+  const [photoVoltage, setPhotoVoltage] = useState<string[]>([]);
+  const [photoCurrent, setPhotoCurrent] = useState<string[]>([]);
+  const [photoFrequency, setPhotoFrequency] = useState<string[]>([]);
+  const [photoSpeed, setPhotoSpeed] = useState<string[]>([]);
 
   // Package Preparation Photos
-  const [photoInverter, setPhotoInverter] = useState<string | null>(null);
-  const [photoWorkTable, setPhotoWorkTable] = useState<string | null>(null);
+  const [photoInverter, setPhotoInverter] = useState<string[]>([]);
+  const [photoWorkTable, setPhotoWorkTable] = useState<string[]>([]);
 
   const [voltageReadings, setVoltageReadings] = useState<Record<string, string>>({});
   const [isSystemUpdate, setIsSystemUpdate] = useState(false);
@@ -131,25 +213,36 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
     });
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, setPhoto: (s: string | null) => void, label: string) => {
-    const file = e.target.files?.[0];
-    if (file) {
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>, setPhoto: React.Dispatch<React.SetStateAction<string[]>>, label: string) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
       setProcessingImage(true);
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const rawBase64 = reader.result as string;
-        try {
-          const watermarkedBase64 = await addWatermark(rawBase64, label);
-          setPhoto(watermarkedBase64);
-        } catch (error) {
-          console.error("Watermark failed", error);
-          setPhoto(rawBase64);
-        } finally {
-          setProcessingImage(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      // Process one by one or all? Let's process the first one for now as the input is usually single selection unless multiple attr is set.
+      // But user might want to add multiple. Let's support multiple selection in input if possible, but camera usually is one.
+      // The requirement asks for "adding more than one image".
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const rawBase64 = reader.result as string;
+          try {
+            const watermarkedBase64 = await addWatermark(rawBase64, label);
+            setPhoto(prev => [...prev, watermarkedBase64]);
+          } catch (error) {
+            console.error("Watermark failed", error);
+            setPhoto(prev => [...prev, rawBase64]);
+          } finally {
+            setProcessingImage(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const removePhoto = (index: number, setPhoto: React.Dispatch<React.SetStateAction<string[]>>) => {
+    setPhoto(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleParamChange = (key: string, value: string) => {
@@ -194,17 +287,17 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
     const isPackagePrep = maintenanceType === 'Package Preparation / تجهيز بكج';
 
     if (isNewInstall) {
-      if (!photoVoltage || !photoCurrent || !photoFrequency || !photoSpeed) {
+      if (photoVoltage.length === 0 || photoCurrent.length === 0 || photoFrequency.length === 0 || photoSpeed.length === 0) {
         alert(lang === 'ar' ? 'جميع صور القراءات (الجهد، التيار، التردد، السرعة) مطلوبة' : 'All reading photos (Voltage, Current, Frequency, Speed) are required');
         return false;
       }
     } else if (isPackagePrep) {
-      if (!photoInverter || !photoWorkTable) {
+      if (photoInverter.length === 0 || photoWorkTable.length === 0) {
         alert(lang === 'ar' ? 'صور المحول وطاولة العمل مطلوبة' : 'Inverter and Work Table photos are required');
         return false;
       }
     } else {
-      if (!photoBefore || !photoAfter) {
+      if (photoBefore.length === 0 || photoAfter.length === 0) {
         alert(lang === 'ar' ? 'الصور (قبل وبعد) مطلوبة' : 'Photos (Before & After) are required');
         return false;
       }
@@ -465,159 +558,103 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
               {maintenanceType === 'New Installation / تركيب جديد' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Photo 1: Voltage */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Voltage (الجهد)</label>
-                      {photoVoltage && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoVoltage, 'VOLTAGE')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoVoltage ? (
-                        <img src={photoVoltage} alt="Voltage" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Zap size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Voltage (الجهد)"
+                    icon={<Zap size={32} className="mb-2" />}
+                    photos={photoVoltage}
+                    setPhotos={setPhotoVoltage}
+                    uploadLabel="VOLTAGE"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
 
                   {/* Photo 2: Current */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Current (التيار)</label>
-                      {photoCurrent && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoCurrent, 'CURRENT')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoCurrent ? (
-                        <img src={photoCurrent} alt="Current" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Zap size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Current (التيار)"
+                    icon={<Zap size={32} className="mb-2" />}
+                    photos={photoCurrent}
+                    setPhotos={setPhotoCurrent}
+                    uploadLabel="CURRENT"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
 
                   {/* Photo 3: Frequency */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Frequency (التردد)</label>
-                      {photoFrequency && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoFrequency, 'FREQUENCY')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoFrequency ? (
-                        <img src={photoFrequency} alt="Frequency" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Activity size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Frequency (التردد)"
+                    icon={<Activity size={32} className="mb-2" />}
+                    photos={photoFrequency}
+                    setPhotos={setPhotoFrequency}
+                    uploadLabel="FREQUENCY"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
 
                   {/* Photo 4: Speed */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Speed (السرعة)</label>
-                      {photoSpeed && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoSpeed, 'SPEED')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoSpeed ? (
-                        <img src={photoSpeed} alt="Speed" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Gauge size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Speed (السرعة)"
+                    icon={<Gauge size={32} className="mb-2" />}
+                    photos={photoSpeed}
+                    setPhotos={setPhotoSpeed}
+                    uploadLabel="SPEED"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
                 </div>
               ) : maintenanceType === 'Package Preparation / تجهيز بكج' ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Photo 1: Inverter */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Inverter (صورة المحول)</label>
-                      {photoInverter && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoInverter, 'INVERTER')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoInverter ? (
-                        <img src={photoInverter} alt="Inverter" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Cpu size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Inverter (صورة المحول)"
+                    icon={<Cpu size={32} className="mb-2" />}
+                    photos={photoInverter}
+                    setPhotos={setPhotoInverter}
+                    uploadLabel="INVERTER"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
 
                   {/* Photo 2: Work Table */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">Work Table (طاولة العمل)</label>
-                      {photoWorkTable && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoWorkTable, 'WORK_TABLE')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoWorkTable ? (
-                        <img src={photoWorkTable} alt="Work Table" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <ImagePlus size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label="Work Table (طاولة العمل)"
+                    icon={<ImagePlus size={32} className="mb-2" />}
+                    photos={photoWorkTable}
+                    setPhotos={setPhotoWorkTable}
+                    uploadLabel="WORK_TABLE"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Default Photos: Before/After */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">{t.photoBefore}</label>
-                      {photoBefore && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoBefore, 'BEFORE WORK')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoBefore ? (
-                        <img src={photoBefore} alt="Before" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <Camera size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label={t.photoBefore}
+                    icon={<Camera size={32} className="mb-2" />}
+                    photos={photoBefore}
+                    setPhotos={setPhotoBefore}
+                    uploadLabel="BEFORE WORK"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-bold text-gray-700 dark:text-white">{t.photoAfter}</label>
-                      {photoAfter && <span className="text-xs text-emerald-500 font-bold bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">Captured</span>}
-                    </div>
-                    <div className="relative aspect-video rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/20 bg-white/30 dark:bg-black/20 overflow-hidden group hover:border-volt-400 transition-colors shadow-inner">
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, setPhotoAfter, 'AFTER WORK')} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                      {photoAfter ? (
-                        <img src={photoAfter} alt="After" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-volt-500 transition-colors">
-                          <ImagePlus size={32} className="mb-2" />
-                          <span className="text-xs font-bold uppercase tracking-wider">{t.tapToCapture}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <PhotoUploadField
+                    label={t.photoAfter}
+                    icon={<ImagePlus size={32} className="mb-2" />}
+                    photos={photoAfter}
+                    setPhotos={setPhotoAfter}
+                    uploadLabel="AFTER WORK"
+                    t={t}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                  />
                 </div>
               )}
 
@@ -633,9 +670,9 @@ const TechnicianForm: React.FC<TechnicianFormProps> = ({ user, onSave, onCancel 
                   type="button"
                   onClick={() => setStep(3)}
                   disabled={
-                    maintenanceType === 'New Installation / تركيب جديد' ? (!photoVoltage || !photoCurrent || !photoFrequency || !photoSpeed) :
-                      maintenanceType === 'Package Preparation / تجهيز بكج' ? (!photoInverter || !photoWorkTable) :
-                        (!photoBefore || !photoAfter)
+                    maintenanceType === 'New Installation / تركيب جديد' ? (photoVoltage.length === 0 || photoCurrent.length === 0 || photoFrequency.length === 0 || photoSpeed.length === 0) :
+                      maintenanceType === 'Package Preparation / تجهيز بكج' ? (photoInverter.length === 0 || photoWorkTable.length === 0) :
+                        (photoBefore.length === 0 || photoAfter.length === 0)
                   }
                   className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-8 py-3 rounded-xl font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform shadow-xl shadow-gray-200 dark:shadow-none"
                 >

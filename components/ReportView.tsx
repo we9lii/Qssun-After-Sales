@@ -12,6 +12,38 @@ const ReportView: React.FC<ReportViewProps> = ({ report, onClose }) => {
   const { t, lang } = useAppContext();
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
+  // Helper to normalize images to array
+  const getImages = (img: string | string[] | null | undefined): string[] => {
+    if (!img) return [];
+    if (Array.isArray(img)) return img;
+    return [img];
+  };
+
+  const ImageGrid = ({ images, title, icon: Icon }: { images: string[], title: string, icon?: any }) => {
+    if (images.length === 0) {
+      return (
+        <div className="space-y-2">
+          {title && <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">{Icon && <Icon size={12} />} {title}</h4>}
+          <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Photos</div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-2">
+        {title && <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1">{Icon && <Icon size={12} />} {title}</h4>}
+        <div className={`grid ${images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+          {images.map((img, idx) => (
+            <div key={idx} onClick={() => setZoomedImage(img)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
+              <img src={img} alt={`${title} ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const mapUrl = report.location
     ? `https://www.google.com/maps?q=${report.location.lat},${report.location.lng}`
     : '#';
@@ -172,105 +204,20 @@ const ReportView: React.FC<ReportViewProps> = ({ report, onClose }) => {
             <div className={`grid gap-4 ${report.maintenanceType === 'New Installation / تركيب جديد' ? 'grid-cols-2' : 'grid-cols-2'} break-inside-avoid`}>
               {report.maintenanceType === 'New Installation / تركيب جديد' ? (
                 <>
-                  {/* Photo: Voltage */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Zap size={12} /> Voltage</h4>
-                    {report.photoVoltage ? (
-                      <div onClick={() => setZoomedImage(report.photoVoltage)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoVoltage} alt="Voltage" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Voltage Photo</div>}
-                  </div>
-
-                  {/* Photo: Current */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Zap size={12} /> Current</h4>
-                    {report.photoCurrent ? (
-                      <div onClick={() => setZoomedImage(report.photoCurrent)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoCurrent} alt="Current" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Current Photo</div>}
-                  </div>
-
-                  {/* Photo: Frequency */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Activity size={12} /> Frequency</h4>
-                    {report.photoFrequency ? (
-                      <div onClick={() => setZoomedImage(report.photoFrequency)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoFrequency} alt="Frequency" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Frequency Photo</div>}
-                  </div>
-
-                  {/* Photo: Speed */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Gauge size={12} /> Speed</h4>
-                    {report.photoSpeed ? (
-                      <div onClick={() => setZoomedImage(report.photoSpeed)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoSpeed} alt="Speed" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Speed Photo</div>}
-                  </div>
+                  <ImageGrid images={getImages(report.photoVoltage)} title="Voltage" icon={Zap} />
+                  <ImageGrid images={getImages(report.photoCurrent)} title="Current" icon={Zap} />
+                  <ImageGrid images={getImages(report.photoFrequency)} title="Frequency" icon={Activity} />
+                  <ImageGrid images={getImages(report.photoSpeed)} title="Speed" icon={Gauge} />
                 </>
               ) : report.maintenanceType === 'Package Preparation / تجهيز بكج' ? (
                 <>
-                  {/* Photo: Inverter */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Cpu size={12} /> Inverter</h4>
-                    {report.photoInverter ? (
-                      <div onClick={() => setZoomedImage(report.photoInverter)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoInverter} alt="Inverter" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Inverter Photo</div>}
-                  </div>
-
-                  {/* Photo: Work Table */}
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-1"><Zap size={12} /> Work Table</h4>
-                    {report.photoWorkTable ? (
-                      <div onClick={() => setZoomedImage(report.photoWorkTable)} className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in">
-                        <img src={report.photoWorkTable} alt="Work Table" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"><ZoomIn size={24} /></div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Work Table Photo</div>}
-                  </div>
+                  <ImageGrid images={getImages(report.photoInverter)} title="Inverter" icon={Cpu} />
+                  <ImageGrid images={getImages(report.photoWorkTable)} title="Work Table" icon={Zap} />
                 </>
               ) : (
                 <>
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">{t.photoBefore}</h4>
-                    {report.photoBefore ? (
-                      <div
-                        onClick={() => setZoomedImage(report.photoBefore)}
-                        className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in"
-                      >
-                        <img src={report.photoBefore} alt="Before" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                          <ZoomIn size={24} />
-                        </div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Photo</div>}
-                  </div>
-
-                  <div className="space-y-2">
-                    <h4 className="font-bold text-center text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2">{t.photoAfter}</h4>
-                    {report.photoAfter ? (
-                      <div
-                        onClick={() => setZoomedImage(report.photoAfter)}
-                        className="relative aspect-video bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden border border-white/50 dark:border-gray-700 shadow-sm group cursor-zoom-in"
-                      >
-                        <img src={report.photoAfter} alt="After" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                          <ZoomIn size={24} />
-                        </div>
-                      </div>
-                    ) : <div className="aspect-video bg-gray-50/50 dark:bg-white/5 rounded-2xl border-2 border-dashed border-gray-300 dark:border-white/10 flex items-center justify-center text-gray-400 text-xs font-medium">No Photo</div>}
-                  </div>
+                  <ImageGrid images={getImages(report.photoBefore)} title={t.photoBefore} />
+                  <ImageGrid images={getImages(report.photoAfter)} title={t.photoAfter} />
                 </>
               )}
             </div>
