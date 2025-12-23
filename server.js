@@ -65,14 +65,14 @@ const Report = sequelize.define('Report', {
   startTime: { type: DataTypes.DATE },
   endTime: { type: DataTypes.DATE },
   location: { type: DataTypes.JSONB }, // Stores lat, lng, etc.
-  photoBefore: { type: DataTypes.JSON }, // Changed to JSON to store string[]
-  photoAfter: { type: DataTypes.JSON },  // Changed to JSON to store string[]
-  photoVoltage: { type: DataTypes.JSON }, // New Field
-  photoCurrent: { type: DataTypes.JSON }, // New Field
-  photoFrequency: { type: DataTypes.JSON }, // New Field
-  photoSpeed: { type: DataTypes.JSON }, // New Field
-  photoInverter: { type: DataTypes.JSON }, // New Field
-  photoWorkTable: { type: DataTypes.JSON }, // New Field
+  photoBefore: { type: DataTypes.TEXT }, // Stored as JSON string
+  photoAfter: { type: DataTypes.TEXT },  // Stored as JSON string
+  photoVoltage: { type: DataTypes.TEXT },
+  photoCurrent: { type: DataTypes.TEXT },
+  photoFrequency: { type: DataTypes.TEXT },
+  photoSpeed: { type: DataTypes.TEXT },
+  photoInverter: { type: DataTypes.TEXT },
+  photoWorkTable: { type: DataTypes.TEXT },
   voltageReadings: { type: DataTypes.JSONB }, // Stores P07.xx keys
   notes: { type: DataTypes.TEXT },
   customerSignature: { type: DataTypes.TEXT }, // Base64 (usually small enough) or URL
@@ -175,16 +175,17 @@ app.post('/api/reports', async (req, res) => {
     const photoWorkTable = await uploadPhotoArray(data.photoWorkTable);
 
     // Create Record in DB
+    // Store arrays as JSON strings since column type is TEXT
     const report = await Report.create({
       ...data,
-      photoBefore,
-      photoAfter,
-      photoVoltage,
-      photoCurrent,
-      photoFrequency,
-      photoSpeed,
-      photoInverter,
-      photoWorkTable
+      photoBefore: JSON.stringify(photoBefore),
+      photoAfter: JSON.stringify(photoAfter),
+      photoVoltage: JSON.stringify(photoVoltage),
+      photoCurrent: JSON.stringify(photoCurrent),
+      photoFrequency: JSON.stringify(photoFrequency),
+      photoSpeed: JSON.stringify(photoSpeed),
+      photoInverter: JSON.stringify(photoInverter),
+      photoWorkTable: JSON.stringify(photoWorkTable)
     });
 
     res.json(report);

@@ -16,7 +16,21 @@ const ReportView: React.FC<ReportViewProps> = ({ report, onClose }) => {
   const getImages = (img: string | string[] | null | undefined): string[] => {
     if (!img) return [];
     if (Array.isArray(img)) return img;
-    return [img];
+
+    // Handle JSON stringified arrays (from backend TEXT columns)
+    if (typeof img === 'string') {
+      if (img.trim().startsWith('[')) {
+        try {
+          const parsed = JSON.parse(img);
+          if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+          // Not valid JSON, treat as single URL
+        }
+      }
+      return [img];
+    }
+
+    return [];
   };
 
   const ImageGrid = ({ images, title, icon: Icon }: { images: string[], title: string, icon?: any }) => {
